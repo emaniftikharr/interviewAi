@@ -1290,6 +1290,37 @@ def _load_css() -> None:
     color: var(--t3);
     backdrop-filter: blur(8px);
 }
+
+/* ════════════════════════════════════════════════════════════
+   ── KEYBOARD SHORTCUT HINTS BAR ──
+════════════════════════════════════════════════════════════ */
+.kb-hints {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: .35rem .65rem;
+    padding: .5rem 1rem;
+    background: rgba(59,130,246,.04);
+    border: 1px solid rgba(59,130,246,.12);
+    border-radius: var(--r2);
+    margin-bottom: .5rem;
+    font-family: Inter, sans-serif;
+    font-size: .76rem;
+    color: var(--t3);
+}
+.kb-item { display: inline-flex; align-items: center; gap: .28rem; }
+.kb-sep  { color: var(--t4); }
+.kb-hints kbd {
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.14);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: .08em .42em;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .71rem;
+    color: var(--t2);
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -2872,6 +2903,21 @@ def _render_welcome_screen() -> None:
 #  INPUT BAR
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _render_keyboard_hints() -> None:
+    """Render a keyboard shortcut reference bar above the chat input."""
+    st.markdown("""
+<div class="kb-hints">
+  <span class="kb-item"><kbd>Enter</kbd> Submit answer</span>
+  <span class="kb-sep">·</span>
+  <span class="kb-item">type <kbd>hint</kbd> for a clue</span>
+  <span class="kb-sep">·</span>
+  <span class="kb-item">type <kbd>skip</kbd> for next question</span>
+  <span class="kb-sep">·</span>
+  <span class="kb-item"><kbd>End Session</kbd> in sidebar for debrief</span>
+</div>
+""", unsafe_allow_html=True)
+
+
 def _render_input_bar() -> None:
     ss = st.session_state
 
@@ -2901,6 +2947,7 @@ def _render_input_bar() -> None:
             _handle_skip_mcq(); st.rerun()
     else:
         # ── Open-ended mode: original hint/skip + text input ───────────────
+        _render_keyboard_hints()
         c1, c2 = st.columns(2)
         with c1:
             if st.button("💡 Get Hint", use_container_width=True):
