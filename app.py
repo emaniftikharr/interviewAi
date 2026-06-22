@@ -1356,6 +1356,7 @@ def _init_state() -> None:
         # MCQ
         "question_type": "MCQ",          # "MCQ" | "Open-ended"
         "current_mcq_data": None,        # {question, options, correct, explanation}
+        "session_target": 10,            # target questions per session (for progress bar)
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -2142,6 +2143,17 @@ def _sidebar_active() -> None:
     c2.metric("Avg Score", f"{stats['average']}/10" if stats["total"] else "—")
     c1.metric("Best", f"{stats['highest']}/10"  if stats["total"] else "—")
     c2.metric("Trend", stats["trend"])
+
+    if stats["total"] > 0:
+        target = ss.get("session_target", 10)
+        progress_val = min(stats["total"] / target, 1.0)
+        st.markdown(
+            f'<p style="font-family:Inter,sans-serif;font-size:.7rem;color:var(--t4);'
+            f'text-transform:uppercase;letter-spacing:.07em;margin:.8rem 0 .2rem;">'
+            f'Session Progress · {stats["total"]}/{target} questions</p>',
+            unsafe_allow_html=True,
+        )
+        st.progress(progress_val)
 
     if ss.scores:
         st.markdown(
