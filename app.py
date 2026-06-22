@@ -12,6 +12,8 @@ import os
 import random
 import time
 
+import altair as alt
+import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 from dotenv import load_dotenv
@@ -2716,6 +2718,38 @@ def _render_setup_page() -> None:
             st.rerun()
 
 
+def _render_score_chart(scores: list[int]) -> None:
+    """Render a color-coded Altair bar chart of score history."""
+    if not scores:
+        return
+    df = pd.DataFrame({
+        "Question": [f"Q{i + 1}" for i in range(len(scores))],
+        "Score": scores,
+        "color": [_score_colour(s) for s in scores],
+    })
+    chart = (
+        alt.Chart(df)
+        .mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4)
+        .encode(
+            x=alt.X("Question:N", sort=None,
+                    axis=alt.Axis(labelColor="#94a3b8", tickColor="#475569",
+                                  domainColor="#1f2a3d", labelAngle=0)),
+            y=alt.Y("Score:Q", scale=alt.Scale(domain=[0, 10]),
+                    axis=alt.Axis(labelColor="#94a3b8", tickColor="#475569",
+                                  domainColor="#1f2a3d", gridColor="#1a2235", grid=True)),
+            color=alt.Color("color:N", scale=None, legend=None),
+            tooltip=[alt.Tooltip("Question:N"), alt.Tooltip("Score:Q")],
+        )
+        .properties(
+            height=220,
+            background="#0e1320",
+            padding={"left": 10, "right": 10, "top": 10, "bottom": 10},
+        )
+        .configure_view(strokeWidth=0)
+    )
+    st.altair_chart(chart, use_container_width=True)
+
+
 def _render_results_page() -> None:
     ss = st.session_state
 
@@ -2750,6 +2784,10 @@ def _render_results_page() -> None:
         _render_summary_msg(summary_msg)
     else:
         st.info("No summary available.")
+
+    if ss.scores:
+        st.markdown("### 📈 Score History")
+        _render_score_chart(ss.scores)
 
     # Per-question breakdown
     if ss.qa_history:
