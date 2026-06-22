@@ -500,6 +500,94 @@ class Interviewer:
                 "correct": "C",
                 "explanation": "Dijkstra's algorithm is designed for shortest paths in weighted graphs. BFS works for unweighted graphs only.",
             },
+            "Machine Learning": {
+                "question": "Which of the following best describes overfitting in a machine learning model?",
+                "options": {
+                    "A": "Model performs well on training data but poorly on unseen data",
+                    "B": "Model performs poorly on both training and test data",
+                    "C": "Model generalises perfectly to all new examples",
+                    "D": "Model has too few parameters to learn any pattern",
+                },
+                "correct": "A",
+                "explanation": "Overfitting means the model memorises training data (including noise), giving high training accuracy but poor generalisation. The opposite, underfitting, corresponds to option B.",
+            },
+            "System Design": {
+                "question": "Which consistency model guarantees that all nodes see the same data at the same time?",
+                "options": {
+                    "A": "Eventual consistency",
+                    "B": "Strong consistency",
+                    "C": "Causal consistency",
+                    "D": "Read-your-writes consistency",
+                },
+                "correct": "B",
+                "explanation": "Strong consistency ensures every read returns the most recent write, regardless of which node is queried. Eventual consistency allows temporary divergence but guarantees convergence over time.",
+            },
+            "Databases": {
+                "question": "Which SQL JOIN returns all rows from the left table even when there is no match in the right table?",
+                "options": {
+                    "A": "INNER JOIN",
+                    "B": "RIGHT JOIN",
+                    "C": "LEFT JOIN",
+                    "D": "CROSS JOIN",
+                },
+                "correct": "C",
+                "explanation": "LEFT JOIN returns all rows from the left table and matching rows from the right. Unmatched right-table columns are filled with NULL. INNER JOIN returns only matched rows.",
+            },
+            "APIs & REST": {
+                "question": "Which HTTP method is idempotent and should be used to fully replace a resource?",
+                "options": {
+                    "A": "POST",
+                    "B": "PATCH",
+                    "C": "PUT",
+                    "D": "DELETE",
+                },
+                "correct": "C",
+                "explanation": "PUT is idempotent — calling it multiple times with the same body produces the same result. It replaces the entire resource. PATCH partially updates it. POST creates a new resource and is not idempotent.",
+            },
+            "Operating Systems": {
+                "question": "What is the key difference between a process and a thread?",
+                "options": {
+                    "A": "Threads have their own memory space; processes share memory",
+                    "B": "Processes have their own memory space; threads share memory within a process",
+                    "C": "Threads are managed by the kernel; processes are managed by the CPU",
+                    "D": "Processes are faster to create than threads",
+                },
+                "correct": "B",
+                "explanation": "Each process has its own isolated memory space. Threads within the same process share the same memory space, making communication easier but also introducing concurrency risks like race conditions.",
+            },
+            "Deep Learning": {
+                "question": "What problem does batch normalisation primarily solve in deep neural networks?",
+                "options": {
+                    "A": "Overfitting due to too many parameters",
+                    "B": "Internal covariate shift causing unstable training",
+                    "C": "Vanishing gradients caused by large learning rates",
+                    "D": "Data imbalance in the training set",
+                },
+                "correct": "B",
+                "explanation": "Batch normalisation normalises layer inputs to reduce internal covariate shift — the change in distribution of inputs to each layer during training. This stabilises and accelerates training.",
+            },
+            "CI/CD Pipelines": {
+                "question": "What is the primary difference between Continuous Delivery and Continuous Deployment?",
+                "options": {
+                    "A": "Continuous Delivery runs tests automatically; Continuous Deployment does not",
+                    "B": "Continuous Delivery requires manual approval before production; Continuous Deployment releases automatically",
+                    "C": "Continuous Deployment only works with containerised applications",
+                    "D": "Continuous Delivery is a subset of Continuous Integration",
+                },
+                "correct": "B",
+                "explanation": "Continuous Delivery ensures software is always in a deployable state but requires a manual trigger for production. Continuous Deployment goes further by automatically releasing every passing build to production.",
+            },
+            "Behavioral": {
+                "question": "A teammate disagrees with your technical design in a code review. What is the best response?",
+                "options": {
+                    "A": "Escalate immediately to the team lead to resolve the conflict",
+                    "B": "Ignore the feedback and merge as-is since you wrote the code",
+                    "C": "Discuss the trade-offs openly, consider their perspective, and reach a data-driven consensus",
+                    "D": "Accept all changes without discussion to avoid conflict",
+                },
+                "correct": "C",
+                "explanation": "Effective engineers engage constructively with differing opinions. Discussing trade-offs and seeking consensus leads to better solutions and a healthier team dynamic than either ignoring feedback or blindly accepting it.",
+            },
         }
         default = {
             "question": f"Which of the following best describes a key concept in {topic}?",
