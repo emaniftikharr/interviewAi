@@ -13,6 +13,7 @@ import random
 import time
 
 import streamlit as st
+import streamlit.components.v1 as components
 from dotenv import load_dotenv
 
 from evaluator import Evaluator
@@ -1672,6 +1673,39 @@ def _svg_ring(score: int, size: int = 64) -> str:
     )
 
 
+def _copy_button(text: str) -> None:
+    """Render a JS clipboard copy button for the question text."""
+    safe = text.replace("\\", "\\\\").replace("`", "\\`").replace("$", "\\$")
+    components.html(f"""
+<button id="cpbtn" onclick="
+  navigator.clipboard.writeText(`{safe}`)
+    .then(() => {{
+      this.innerHTML = '✓ Copied!';
+      this.style.color = '#4ade80';
+      this.style.borderColor = 'rgba(74,222,128,.35)';
+      setTimeout(() => {{
+        this.innerHTML = '📋 Copy Question';
+        this.style.color = '#64748b';
+        this.style.borderColor = 'rgba(255,255,255,.12)';
+      }}, 2000);
+    }})
+    .catch(() => {{ this.innerHTML = '❌ Failed'; }});
+" style="
+  background:transparent;
+  border:1px solid rgba(255,255,255,.12);
+  color:#64748b;
+  font-size:.73rem;
+  font-family:Inter,sans-serif;
+  padding:.28rem .75rem;
+  border-radius:6px;
+  cursor:pointer;
+  margin-top:.35rem;
+  transition:all .15s;
+  line-height:1.4;
+">📋 Copy Question</button>
+""", height=42)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  MESSAGE RENDERERS
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1722,6 +1756,7 @@ def _render_question_msg(msg: dict) -> None:
   <p class="q-text">{text}</p>
 </div>
 """, unsafe_allow_html=True)
+    _copy_button(msg.get("content", ""))
 
 
 def _render_user_msg(msg: dict) -> None:
@@ -1854,6 +1889,7 @@ def _render_question_mcq(msg: dict) -> None:
   <div class="mcq-options">{opts_html}</div>
 </div>
 """, unsafe_allow_html=True)
+    _copy_button(msg.get("content", ""))
 
 
 def _render_mcq_result(msg: dict) -> None:
