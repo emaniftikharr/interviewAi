@@ -2749,6 +2749,105 @@ def _render_setup_page() -> None:
             st.rerun()
 
 
+def _generate_text_export() -> str:
+    ss = st.session_state
+    avg = f"{sum(ss.scores)/len(ss.scores):.1f}" if ss.scores else "—"
+    lines = [
+        "=" * 62,
+        "  INTERVIEWAI — SESSION REPORT",
+        "=" * 62,
+        f"  Role       : {ss.role}",
+        f"  Topic      : {ss.topic}",
+        f"  Difficulty : {ss.difficulty}",
+        f"  Mode       : {ss.mode}",
+        f"  Questions  : {len(ss.qa_history)}",
+        f"  Avg Score  : {avg}/10",
+        "=" * 62, "",
+    ]
+    for i, qa in enumerate(ss.qa_history):
+        ev = qa.get("evaluation", {})
+        lines += [
+            f"Question {i+1}  [{qa.get('score', 0)}/10]",
+            qa["question"], "",
+            "Your Answer:", f"  {qa['answer']}", "",
+            f"Verdict: {ev.get('brief_verdict', '')}", "",
+        ]
+        for s in (ev.get("strengths") or []):
+            lines.append(f"  + {s}")
+        for g in (ev.get("missing_concepts") or []):
+            lines.append(f"  - {g}")
+        lines += [
+            "", f"Feedback:", f"  {ev.get('detailed_feedback', '')}",
+            "", f"Model Answer:", f"  {ev.get('ideal_answer', 'N/A')}",
+            "", "-" * 62, "",
+        ]
+    return "\n".join(lines)
+
+
+def _generate_html_export() -> str:
+    ss = st.session_state
+    avg = f"{sum(ss.scores)/len(ss.scores):.1f}" if ss.scores else "—"
+
+    def sc(s):
+        return "#22c55e" if s >= 8 else "#f59e0b" if s >= 6 else "#f97316" if s >= 4 else "#ef4444"
+
+    qa_blocks = ""
+    for i, qa in enumerate(ss.qa_history):
+        ev = qa.get("evaluation", {})
+        score = qa.get("score", 0)
+        s_html = "".join(f"<li>{_html.escape(s)}</li>" for s in (ev.get("strengths") or []))
+        g_html = "".join(f"<li>{_html.escape(g)}</li>" for g in (ev.get("missing_concepts") or []))
+        qa_blocks += f"""
+<div class="qa">
+  <div class="qa-hd">
+    <span class="qa-n">Q{i+1}</span>
+    <span class="qa-sc" style="color:{sc(score)};">{score}/10</span>
+    <span class="qa-vd">{_html.escape(ev.get('brief_verdict',''))}</span>
+  </div>
+  <div class="qa-q">{_html.escape(qa['question'])}</div>
+  <div class="lbl">Your Answer</div><div class="ans">{_html.escape(qa['answer'])}</div>
+  {f'<div class="lbl">Strengths</div><ul class="lst green">{s_html}</ul>' if s_html else ''}
+  {f'<div class="lbl">Areas to Improve</div><ul class="lst red">{g_html}</ul>' if g_html else ''}
+  <div class="lbl">Feedback</div><div class="txt">{_html.escape(ev.get('detailed_feedback',''))}</div>
+  <div class="lbl">Model Answer</div><div class="txt model">{_html.escape(ev.get('ideal_answer','N/A'))}</div>
+</div>"""
+
+    return f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<title>InterviewAI Report</title><style>
+body{{font-family:Inter,Arial,sans-serif;max-width:800px;margin:40px auto;color:#1e293b;line-height:1.6;}}
+h1{{color:#7c3aed;border-bottom:2px solid #7c3aed;padding-bottom:.5rem;}}
+.meta{{background:#f8faff;border:1px solid #e2e8f0;border-radius:8px;padding:1rem 1.5rem;
+       margin-bottom:2rem;display:grid;grid-template-columns:1fr 1fr;gap:.4rem;font-size:.9rem;}}
+.mk{{color:#64748b;}} .mv{{font-weight:600;}}
+.qa{{border:1px solid #e2e8f0;border-radius:10px;padding:1.2rem 1.5rem;margin-bottom:1.5rem;}}
+.qa-hd{{display:flex;align-items:center;gap:1rem;margin-bottom:.8rem;}}
+.qa-n{{background:#7c3aed;color:#fff;border-radius:50%;width:28px;height:28px;
+       display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;}}
+.qa-sc{{font-size:1.1rem;font-weight:800;}} .qa-vd{{color:#475569;font-size:.88rem;}}
+.qa-q{{font-size:1rem;font-weight:600;margin-bottom:.8rem;color:#0f172a;}}
+.lbl{{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+      color:#94a3b8;margin:.8rem 0 .3rem;}}
+.ans{{background:#f1f5ff;border-radius:6px;padding:.6rem .9rem;font-size:.9rem;}}
+.lst{{margin:.2rem 0 0 1rem;font-size:.88rem;}} .lst.green{{color:#15803d;}} .lst.red{{color:#dc2626;}}
+.txt{{font-size:.88rem;color:#334155;}}
+.txt.model{{background:#f5f3ff;border-left:3px solid #7c3aed;padding:.6rem .9rem;
+            border-radius:0 6px 6px 0;color:#4c1d95;}}
+@media print{{body{{margin:20px;}}}}
+</style></head><body>
+<h1>🎯 InterviewAI — Session Report</h1>
+<div class="meta">
+  <div><span class="mk">Role: </span><span class="mv">{_html.escape(ss.role)}</span></div>
+  <div><span class="mk">Topic: </span><span class="mv">{_html.escape(ss.topic)}</span></div>
+  <div><span class="mk">Difficulty: </span><span class="mv">{_html.escape(ss.difficulty)}</span></div>
+  <div><span class="mk">Mode: </span><span class="mv">{_html.escape(ss.mode)}</span></div>
+  <div><span class="mk">Questions: </span><span class="mv">{len(ss.qa_history)}</span></div>
+  <div><span class="mk">Average Score: </span><span class="mv">{avg}/10</span></div>
+</div>
+{qa_blocks}
+<p style="text-align:center;color:#94a3b8;font-size:.8rem;margin-top:2rem;">Generated by InterviewAI</p>
+</body></html>"""
+
+
 def _render_score_chart(scores: list[int]) -> None:
     """Render a color-coded Altair bar chart of score history."""
     if not scores:
@@ -2819,6 +2918,27 @@ def _render_results_page() -> None:
     if ss.scores:
         st.markdown("### 📈 Score History")
         _render_score_chart(ss.scores)
+
+    if ss.qa_history:
+        st.markdown("### 💾 Export Session")
+        col_txt, col_html = st.columns(2)
+        slug = ss.topic.lower().replace(" ", "_").replace("/", "")
+        with col_txt:
+            st.download_button(
+                label="📄 Download as Text",
+                data=_generate_text_export(),
+                file_name=f"interviewai_{slug}.txt",
+                mime="text/plain",
+                use_container_width=True,
+            )
+        with col_html:
+            st.download_button(
+                label="🌐 Download as HTML  (open → Print → Save as PDF)",
+                data=_generate_html_export(),
+                file_name=f"interviewai_{slug}.html",
+                mime="text/html",
+                use_container_width=True,
+            )
 
     # Per-question breakdown
     if ss.qa_history:
