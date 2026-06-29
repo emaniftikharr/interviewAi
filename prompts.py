@@ -208,6 +208,34 @@ I'll ask questions one at a time and give you detailed feedback after each answe
 
 Let's go! Here is your first question:"""
 
+# ──────────────────────────────────────────────────────────────────────────────
+# JOB DESCRIPTION PARSER
+# ──────────────────────────────────────────────────────────────────────────────
+
+JD_PARSE_PROMPT = """You are an expert technical recruiter. Analyse the job description below and extract key interview-relevant information.
+
+Job Description:
+{jd_text}
+
+Available topics to choose from:
+{available_topics}
+
+Return ONLY a valid JSON object with EXACTLY this structure:
+{{
+    "role": "<pick the single best match from: Software Engineer, AI/ML Engineer, Backend Engineer, Full Stack Engineer, Data Scientist, Systems Engineer, DevOps Engineer>",
+    "seniority": "<Junior | Mid-level | Senior>",
+    "difficulty": "<Easy | Medium | Hard>",
+    "topics": ["<topic1>", "<topic2>", "<topic3>"],
+    "key_skills": ["<skill1>", "<skill2>", "<skill3>", "<skill4>"]
+}}
+
+Rules:
+- Choose 2-4 topics from the provided list only — no custom topics
+- Match difficulty to seniority: Junior→Easy, Mid-level→Medium, Senior→Hard
+- key_skills should be concrete technical skills mentioned in the JD
+- Return ONLY the JSON object, no other text"""
+
+
 PRACTICE_MODE_INSTRUCTIONS = (
     "📝 **Practice Mode** — No time pressure. Focus on understanding and learning."
 )

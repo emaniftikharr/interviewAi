@@ -9,9 +9,10 @@ import re
 
 from groq import Groq
 from prompts import (
-    QUESTION_GENERATION_PROMPT,
+    JD_PARSE_PROMPT,
     MCQ_GENERATION_PROMPT,
     FOLLOW_UP_PROMPT,
+    QUESTION_GENERATION_PROMPT,
     SESSION_SUMMARY_PROMPT,
     WELCOME_MESSAGE,
     PRACTICE_MODE_INSTRUCTIONS,
@@ -691,6 +692,50 @@ class Interviewer:
                 f"**Performance:** {perf}\n\n"
                 f"Keep practising to sharpen your skills!"
             )
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # JOB DESCRIPTION PARSER
+    # ──────────────────────────────────────────────────────────────────────────
+
+    def parse_jd(self, jd_text: str, available_topics: list[str]) -> dict:
+        """Extract role, difficulty, and topics from a pasted job description."""
+        prompt = JD_PARSE_PROMPT.format(
+            jd_text=jd_text[:3000],
+            available_topics=", ".join(available_topics),
+        )
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                max_tokens=400,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            text = response.choices[0].message.content.strip()
+            for candidate in [
+                text,
+                re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL) and
+                re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL).group(1),
+                re.search(r"\{[\s\S]*\}", text) and re.search(r"\{[\s\S]*\}", text).group(),
+            ]:
+                if not candidate:
+                    continue
+                try:
+                    data = json.loads(candidate)
+                    if all(k in data for k in ("role", "topics", "difficulty")):
+                        data["topics"] = [t for t in data["topics"] if t in available_topics][:4]
+                        if data["role"] not in ROLES:
+                            data["role"] = "Software Engineer"
+                        if data["difficulty"] not in ["Easy", "Medium", "Hard"]:
+                            data["difficulty"] = "Medium"
+                        return data
+                except (json.JSONDecodeError, TypeError):
+                    continue
+        except Exception as exc:
+            logger.error("JD parse error: %s", exc)
+        return {
+            "role": "Software Engineer", "seniority": "Mid-level",
+            "difficulty": "Medium", "topics": ["Data Structures", "Algorithms"],
+            "key_skills": [],
+        }
 
     # ──────────────────────────────────────────────────────────────────────────
     # WELCOME MESSAGE

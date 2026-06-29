@@ -2741,8 +2741,35 @@ def _render_setup_page() -> None:
 
     adaptive = st.toggle("🔄 Adaptive Difficulty", value=ss.adaptive_difficulty)
 
-    # ── Start buttons ─────────────────────────────────────────────────────────
+    # ── Job Description Parser ────────────────────────────────────────────────
     st.markdown("---")
+    with st.expander("📋 Start from a Job Description  *(paste any JD → AI picks role, topics & difficulty)*"):
+        jd_text = st.text_area(
+            "Paste job description here",
+            height=180,
+            placeholder="e.g. 'We are looking for a Senior Backend Engineer with 5+ years of Python, Kafka, and AWS experience…'",
+            label_visibility="collapsed",
+        )
+        if st.button("🔍 Parse JD & Configure Interview", use_container_width=True, disabled=not jd_text.strip()):
+            if not _ensure_api():
+                st.error("Add your Groq API key in the sidebar first.")
+            else:
+                with st.spinner("Analysing job description…"):
+                    parsed = ss.interviewer.parse_jd(jd_text, TOPICS)
+                ss.role       = parsed["role"]
+                ss.difficulty = parsed["difficulty"]
+                ss.topic      = parsed["topics"][0] if parsed["topics"] else TOPICS[0]
+                ss.selected_topic = ss.topic
+                skills_str = ", ".join(parsed.get("key_skills", [])[:4])
+                st.success(
+                    f"Detected: **{parsed['role']}** · **{parsed['difficulty']}** · "
+                    f"Topics: **{', '.join(parsed['topics'])}**"
+                    + (f"  |  Key skills: {skills_str}" if skills_str else "")
+                )
+                st.caption("Settings updated above — click Start Interview when ready.")
+                st.rerun()
+
+    # ── Start buttons ─────────────────────────────────────────────────────────
     st.markdown("")
     c1, c2 = st.columns(2)
     with c1:
