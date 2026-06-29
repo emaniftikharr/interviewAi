@@ -2875,6 +2875,43 @@ h1{{color:#7c3aed;border-bottom:2px solid #7c3aed;padding-bottom:.5rem;}}
 </body></html>"""
 
 
+def _render_topic_heatmap() -> None:
+    """Render an Altair heatmap of avg score per (topic, difficulty) from history."""
+    stats = get_topic_stats()
+    if len(stats) < 2:
+        st.info("Complete sessions across at least 2 different topics to unlock the performance heatmap.")
+        return
+    df = pd.DataFrame(stats)
+    heatmap = (
+        alt.Chart(df)
+        .mark_rect(cornerRadius=3)
+        .encode(
+            x=alt.X("difficulty:N", sort=["Easy", "Medium", "Hard"],
+                    axis=alt.Axis(labelColor="#94a3b8", domainColor="#1f2a3d", tickColor="#475569")),
+            y=alt.Y("topic:N", sort=None,
+                    axis=alt.Axis(labelColor="#94a3b8", labelLimit=220, domainColor="#1f2a3d")),
+            color=alt.Color(
+                "avg:Q",
+                scale=alt.Scale(domain=[0, 5, 10], range=["#ef4444", "#f59e0b", "#22c55e"]),
+                legend=alt.Legend(title="Avg Score", labelColor="#94a3b8", titleColor="#94a3b8"),
+            ),
+            tooltip=[
+                alt.Tooltip("topic:N", title="Topic"),
+                alt.Tooltip("difficulty:N", title="Difficulty"),
+                alt.Tooltip("avg:Q", title="Avg Score"),
+                alt.Tooltip("sessions:Q", title="Sessions"),
+            ],
+        )
+        .properties(
+            height=max(180, len(df["topic"].unique()) * 28),
+            background="#0e1320",
+            padding={"left": 10, "right": 10, "top": 10, "bottom": 10},
+        )
+        .configure_view(strokeWidth=0)
+    )
+    st.altair_chart(heatmap, use_container_width=True)
+
+
 def _render_history_page() -> None:
     ss = st.session_state
     c_back, _, c_theme = st.columns([1, 5, 1])
@@ -2932,6 +2969,11 @@ def _render_history_page() -> None:
                 st.line_chart({"Score": scores_list}, height=90, use_container_width=True)
             if st.button("🗑️ Delete session", key=f"del_{s['id']}"):
                 delete_session(s["id"]); st.rerun()
+
+    st.divider()
+    st.markdown("### 🗺️ Topic Performance Map")
+    st.caption("Red = weak · Yellow = average · Green = strong")
+    _render_topic_heatmap()
 
 
 def _render_score_chart(scores: list[int]) -> None:
